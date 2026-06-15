@@ -21,5 +21,5 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Run Dotnet Format
-        run: dotnet format --verify-no-changes --verbosity normal
+        run: dotnet format --no-restore --verify-no-changes --verbosity normal
 
