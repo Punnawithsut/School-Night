@@ -1,9 +1,5 @@
-using System.Runtime.CompilerServices;
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 public class FpsMovement : MonoBehaviour
 {
@@ -29,6 +25,7 @@ public class FpsMovement : MonoBehaviour
     [SerializeField] private InputActionReference jumpAction;
     [SerializeField] private InputActionReference crouchAction;
     [SerializeField] private InputActionReference sprintAction;
+    [SerializeField] private CameraShake cameraNoiseController; 
 
     private CharacterController _characterController;
     private Vector2 _moveInput;
@@ -153,6 +150,13 @@ public class FpsMovement : MonoBehaviour
         if ((collisions & CollisionFlags.Above) != 0)
         {
             _verticalVelocity = initialFallVelocity;
+        }
+
+        //camera shaking script
+        bool isMoving = _moveInput.sqrMagnitude > 0.001f && _isGrounded;
+        if(cameraNoiseController != null)
+        {
+            cameraNoiseController.SetMovementState(isMoving, _isRunning);
         }
     }
 
