@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 
 public class CursorController : MonoBehaviour
 {
+    public static bool IsPaused = false; 
+
     private void Start()
     {
         LockCursor();
@@ -10,6 +12,8 @@ public class CursorController : MonoBehaviour
 
     private void Update()
     {
+        if (IsPaused) return; 
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             UnlockCursor();
@@ -17,9 +21,7 @@ public class CursorController : MonoBehaviour
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (Cursor.lockState == CursorLockMode.None)
-            {
                 LockCursor();
-            }
         }
     }
 
