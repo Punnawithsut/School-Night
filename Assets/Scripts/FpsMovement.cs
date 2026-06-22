@@ -161,7 +161,7 @@ public class FpsMovement : MonoBehaviour
         bool isGroundedAndMoving =  isMoving && _isGrounded;
         if(cameraNoiseController != null)
         {
-            cameraNoiseController.SetMovementState(isGroundedAndMoving, _isRunning);
+            cameraNoiseController.SetMovementState(isGroundedAndMoving, currentSpeed == runSpeed);
         }
 
         //handle stamina system
