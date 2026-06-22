@@ -1,9 +1,5 @@
-using System.Runtime.CompilerServices;
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 public class FpsMovement : MonoBehaviour
 {
@@ -29,6 +25,8 @@ public class FpsMovement : MonoBehaviour
     [SerializeField] private InputActionReference jumpAction;
     [SerializeField] private InputActionReference crouchAction;
     [SerializeField] private InputActionReference sprintAction;
+    [SerializeField] private CameraShake cameraNoiseController; 
+    [SerializeField] private StaminaSystem staminaSystem;
 
     private CharacterController _characterController;
     private Vector2 _moveInput;
@@ -144,7 +142,11 @@ public class FpsMovement : MonoBehaviour
 
         Vector3 moveDirection = (forward * _moveInput.y) + (right * _moveInput.x);
 
-        var currentSpeed = _isCrouching ? crouchSpeed : (_isRunning ? runSpeed : walkSpeed);
+        bool isMoving = _moveInput.sqrMagnitude > 0.001f;
+        bool hasStaminaToRun = staminaSystem != null && staminaSystem.HasStamina();
+        bool isSprintingNow = _isRunning && isMoving && hasStaminaToRun;
+
+        var currentSpeed = _isCrouching ? crouchSpeed : (isSprintingNow ? runSpeed : walkSpeed);
         var finalMove = moveDirection * currentSpeed;
 
         finalMove.y = _verticalVelocity;
@@ -154,6 +156,27 @@ public class FpsMovement : MonoBehaviour
         {
             _verticalVelocity = initialFallVelocity;
         }
+
+        //camera shaking script
+        bool isGroundedAndMoving =  isMoving && _isGrounded;
+        if(cameraNoiseController != null)
+        {
+            cameraNoiseController.SetMovementState(isGroundedAndMoving, currentSpeed == runSpeed);
+        }
+
+        //handle stamina system
+        if(staminaSystem != null)
+        {
+            if(currentSpeed == runSpeed && isMoving && _isGrounded)
+            {
+                staminaSystem.DrainStamina();
+            }
+            else
+            {
+                staminaSystem.RegenStamina();
+            }
+        }
+        //Debug.Log(isSprintingNow);
     }
 
     private void HandleCrouchTransition()
