@@ -26,6 +26,7 @@ public class FpsMovement : MonoBehaviour
     [SerializeField] private InputActionReference crouchAction;
     [SerializeField] private InputActionReference sprintAction;
     [SerializeField] private CameraShake cameraNoiseController; 
+    [SerializeField] private StaminaSystem staminaSystem;
 
     private CharacterController _characterController;
     private Vector2 _moveInput;
@@ -141,7 +142,11 @@ public class FpsMovement : MonoBehaviour
 
         Vector3 moveDirection = (forward * _moveInput.y) + (right * _moveInput.x);
 
-        var currentSpeed = _isCrouching ? crouchSpeed : (_isRunning ? runSpeed : walkSpeed);
+        bool isMoving = _moveInput.sqrMagnitude > 0.001f;
+        bool hasStaminaToRun = staminaSystem != null && staminaSystem.HasStamina();
+        bool isSprintingNow = _isRunning && isMoving && hasStaminaToRun;
+
+        var currentSpeed = _isCrouching ? crouchSpeed : (isSprintingNow ? runSpeed : walkSpeed);
         var finalMove = moveDirection * currentSpeed;
 
         finalMove.y = _verticalVelocity;
@@ -153,11 +158,25 @@ public class FpsMovement : MonoBehaviour
         }
 
         //camera shaking script
-        bool isMoving = _moveInput.sqrMagnitude > 0.001f && _isGrounded;
+        bool isGroundedAndMoving =  isMoving && _isGrounded;
         if(cameraNoiseController != null)
         {
-            cameraNoiseController.SetMovementState(isMoving, _isRunning);
+            cameraNoiseController.SetMovementState(isGroundedAndMoving, _isRunning);
         }
+
+        //handle stamina system
+        if(staminaSystem != null)
+        {
+            if(currentSpeed == runSpeed && isMoving && _isGrounded)
+            {
+                staminaSystem.DrainStamina();
+            }
+            else
+            {
+                staminaSystem.RegenStamina();
+            }
+        }
+        //Debug.Log(isSprintingNow);
     }
 
     private void HandleCrouchTransition()
