@@ -72,6 +72,7 @@ public class AnomalyManager : MonoBehaviour
         if (currentSpawnedAnomaly != null)
         {
             Destroy(currentSpawnedAnomaly);
+            currentSpawnedAnomaly = null;
         }
 
         if (currentActivePoint != null)
