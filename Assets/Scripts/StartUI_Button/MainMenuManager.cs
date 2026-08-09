@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 public class MainMenuManager : MonoBehaviour
 {
     // ชื่อ Scene เกมที่จะโหลดเมื่อกด Play
-    public string gameSceneName = "SampleScene";
+    public string gameSceneName = "5th_floor";
 
     public void OnPlayPressed()
     {

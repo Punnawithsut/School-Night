@@ -4,9 +4,9 @@ using UnityEngine.InputSystem;
 public class FpsMovement : MonoBehaviour
 {
     [Header("Speed")]
-    [SerializeField] private float walkSpeed = 5f;
-    [SerializeField] private float runSpeed = 8f;
-    [SerializeField] private float crouchSpeed = 2f;
+    [SerializeField] private float walkSpeed = 7f;
+    [SerializeField] private float runSpeed = 12f;
+    [SerializeField] private float crouchSpeed = 4f;
 
     [Header("Jump and Fall")]
     [SerializeField] private float jumpForce = 7f;
