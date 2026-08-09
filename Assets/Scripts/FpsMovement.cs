@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class FpsMovement : MonoBehaviour
 {
     [Header("Speed")]
-    [SerializeField] private float walkSpeed = 6f;
+    [SerializeField] private float walkSpeed = 7f;
     [SerializeField] private float runSpeed = 12f;
     [SerializeField] private float crouchSpeed = 4f;
 
