@@ -8,7 +8,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnPlayPressed()
     {
-        SceneManager.LoadScene(gameSceneName);
+        SceneManager.LoadScene("Intro");
     }
 
     public void OnSettingsPressed()
