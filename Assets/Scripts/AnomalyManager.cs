@@ -22,22 +22,16 @@ public class AnomalyManager : MonoBehaviour
 
     [Header("Game Settings")]
     [SerializeField] private float anomalyChance = 0.6f;
-    [SerializeField] private int startStage = 8;
 
     [Header("Weighted Anomaly Pool")]
     [SerializeField] private List<WeightedAnomaly> anomalyPool;
 
-    public int CurrentStage { get; private set; } = 8;
+    // Floor tracking now lives solely in GameManager. This class just reads it.
     public bool IsAnomalyActive { get; private set; } = false;
     public bool CurrentFloorHasAnomaly => IsAnomalyActive;
 
     private GameObject currentActiveAnomaly;
     private int currentTestIndex = 0;
-
-    void Start()
-    {
-        CurrentStage = startStage;
-    }
 
     public void SetupFloor()
     {
@@ -58,14 +52,20 @@ public class AnomalyManager : MonoBehaviour
         }
 
         // --- NORMAL GAMEPLAY LOGIC (Weighted Random) ---
-        if (CurrentStage == startStage)
+        int currentFloor = GameManager.Instance.CurrentFloor;
+        int startFloor = GameManager.Instance.startingFloor;
+
+        if (currentFloor == startFloor)
         {
+            // First floor of a loop is always safe/normal.
             IsAnomalyActive = false;
         }
         else
         {
             IsAnomalyActive = Random.value < anomalyChance;
         }
+
+        Debug.Log($"[DEBUG] Floor {currentFloor} Anomaly Active: {IsAnomalyActive}");
 
         if (IsAnomalyActive && anomalyPool != null && anomalyPool.Count > 0)
         {
@@ -145,8 +145,8 @@ public class AnomalyManager : MonoBehaviour
         }
 
         // 2. Position strictly from anomalyMark (fallback to normalObject if mark missing)
-        Vector3 spawnPos = anomalyData.anomalyMark != null 
-            ? anomalyData.anomalyMark.position 
+        Vector3 spawnPos = anomalyData.anomalyMark != null
+            ? anomalyData.anomalyMark.position
             : (anomalyData.normalObject != null ? anomalyData.normalObject.transform.position : anomalyData.prefab.transform.position);
 
         // 3. Rotation strictly from the Prefab itself
@@ -168,34 +168,5 @@ public class AnomalyManager : MonoBehaviour
         currentActiveAnomaly.SetActive(true);
 
         Debug.Log($"[DEBUG] Spawning Anomaly [{index}]: {anomalyData.anomalyName}");
-    }
-
-    public void SubmitPlayerChoice(bool choseToTurnBack)
-    {
-        bool isCorrectChoice = (IsAnomalyActive && choseToTurnBack) || (!IsAnomalyActive && !choseToTurnBack);
-
-        if (isCorrectChoice)
-        {
-            CurrentStage--;
-            Debug.Log($"Correct choice! Current Exit sign: Exit {CurrentStage}");
-
-            if (CurrentStage <= 0)
-            {
-                TriggerWinSequence();
-                return;
-            }
-        }
-        else
-        {
-            CurrentStage = startStage;
-            Debug.Log("Wrong choice! Loop reset back to Exit 8.");
-        }
-
-        SetupFloor();
-    }
-
-    private void TriggerWinSequence()
-    {
-        Debug.Log("Congratulations! Successfully escaped through Exit 0.");
     }
 }
