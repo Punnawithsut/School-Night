@@ -176,15 +176,26 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Hello
+  m_text: 'One night, while I was going back
 
-    This
+    to retrieve my iPad that I''d left
 
-    is
+    at
+    the classroom building...
 
-    School
 
-    Night'
+    I was in the elevator when it
+
+    suddenly froze
+    and the lights
+
+    went out for a moment.
+
+
+    When the lights came back on,
+
+    I
+    found myself on the 8th floor.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -370,8 +381,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::IntroManager
   storyText: {fileID: 51923371}
   skipButton: {fileID: 1042318934}
-  scrollSpeed: 60
-  startDelay: 1
+  scrollSpeed: 45
+  startDelay: 0.5
   nextScene: 5th_floor
 --- !u!4 &536155904
 Transform:
