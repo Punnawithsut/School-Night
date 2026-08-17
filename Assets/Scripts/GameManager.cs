@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     public bool timerRunning = false;
 
     [Header("Floor Intro Animation")]
-    public RectTransform floorIntroText;   // big centered text, e.g. "Floor 5"
+    public RectTransform floorIntroText;
     public TextMeshProUGUI floorIntroLabel;
     public Vector2 introCenterPos = Vector2.zero;
     public Vector2 introCornerPos = new Vector2(400f, -250f);
@@ -30,6 +30,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Timer UI")]
     public TextMeshProUGUI timerText;
+
+    [Header("Transition")]
+    public CanvasGroup fadeCanvas;
 
     public enum GameState { Playing, Won, Transitioning }
     public GameState State { get; private set; }
@@ -43,6 +46,8 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         currentFloor = startingFloor;
+        if (fadeCanvas != null) fadeCanvas.alpha = 0f;
+        TeleportPlayer();
         anomalyManager.SetupFloor();
         PlayFloorIntro();
     }
@@ -56,39 +61,78 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void TeleportPlayer()
+    {
+        if (playerStartPoint == null) return;
+
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null) return;
+
+        var cc = player.GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+
+        player.transform.position = playerStartPoint.position;
+        player.transform.rotation = Quaternion.Euler(0, playerStartPoint.rotation.eulerAngles.y, 0);
+
+        var cam = player.GetComponentInChildren<Camera>();
+        if (cam != null)
+            cam.transform.localRotation = Quaternion.Euler(playerStartPoint.rotation.eulerAngles.x, 0, 0);
+
+        if (cc != null) cc.enabled = true;
+    }
+
     public void PlayerMadeChoice(bool playerSaysAnomaly)
     {
         if (State != GameState.Playing) return;
+        StartCoroutine(ChoiceRoutine(playerSaysAnomaly));
+    }
+
+    private IEnumerator ChoiceRoutine(bool playerSaysAnomaly)
+    {
+        State = GameState.Transitioning;
+        timerRunning = false;
+
+        yield return StartCoroutine(Fade(0f, 1f, 0.5f));
+        yield return new WaitForSeconds(0.3f);
 
         bool correct = playerSaysAnomaly == anomalyManager.CurrentFloorHasAnomaly;
-
         if (correct)
         {
             currentFloor--;
             if (currentFloor <= 0)
             {
                 WinGame();
-                return;
+                yield break;
             }
         }
         else
         {
-            // Wrong answer — send player all the way back to floor 8
             currentFloor = startingFloor;
         }
 
         NextLoop();
+
+        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(Fade(1f, 0f, 0.5f));
+    }
+
+    private IEnumerator Fade(float from, float to, float duration)
+    {
+        if (fadeCanvas == null) yield break;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            fadeCanvas.alpha = Mathf.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+        fadeCanvas.alpha = to;
     }
 
     private void NextLoop()
     {
-        if (playerStartPoint != null)
-        {
-            var player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-                player.transform.position = playerStartPoint.position;
-        }
-
+        TeleportPlayer();
         anomalyManager.SetupFloor();
         PlayFloorIntro();
     }
@@ -103,7 +147,6 @@ public class GameManager : MonoBehaviour
         State = GameState.Transitioning;
         timerRunning = false;
 
-        // hide timer during the reveal
         if (timerText != null)
             timerText.gameObject.SetActive(false);
 
@@ -133,7 +176,6 @@ public class GameManager : MonoBehaviour
         floorIntroText.anchoredPosition = introCornerPos;
         floorIntroText.localScale = endScale;
 
-        // show timer once the tween settles
         if (timerText != null)
             timerText.gameObject.SetActive(true);
 
@@ -153,13 +195,13 @@ public class GameManager : MonoBehaviour
     {
         State = GameState.Won;
         timerRunning = false;
+        if (fadeCanvas != null) fadeCanvas.alpha = 0f;
         Debug.Log($"WIN!!! Time: {elapsedTime:F2}s");
         // trigger win UI here
     }
 
     private void UpdateFloorUI()
     {
-        // floorText.text = currentFloor.ToString();
         Debug.Log($"Now on floor {currentFloor}");
     }
 

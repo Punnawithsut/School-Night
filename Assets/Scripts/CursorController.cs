@@ -12,13 +12,15 @@ public class CursorController : MonoBehaviour
 
     private void Update()
     {
-        if (IsPaused) return; 
+        if (IsPaused) return;
 
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             UnlockCursor();
         }
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+
+        // เพิ่ม !IsPaused ให้ชัดเจน
+        if (!IsPaused && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (Cursor.lockState == CursorLockMode.None)
                 LockCursor();
