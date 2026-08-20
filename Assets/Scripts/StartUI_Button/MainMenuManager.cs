@@ -20,6 +20,10 @@ public class MainMenuManager : MonoBehaviour
     public void OnQuitPressed()
     {
         Application.Quit();
-        Debug.Log("ออกจากเกม"); // จะเห็นแค่ใน Editor
+        Debug.Log("ออกจากเกม");
+
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
     }
 }
