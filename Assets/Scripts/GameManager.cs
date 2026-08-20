@@ -14,6 +14,9 @@ public class GameManager : MonoBehaviour
     public int startingFloor = 8;
     private int currentFloor;
 
+    // Exposed so AnomalyManager (and anything else) can read the authoritative floor value.
+    public int CurrentFloor => currentFloor;
+
     [Header("Timer")]
     public float elapsedTime = 0f;
     public bool timerRunning = false;
