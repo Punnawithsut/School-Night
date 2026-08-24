@@ -19,9 +19,15 @@ public class FpsMovement : MonoBehaviour
     [SerializeField] private float crouchTransitionSpeed = 10f;
     [SerializeField] private float cameraOffset = 0.4f;
 
+    [Header("Look Settings")]
+    [SerializeField] private Vector2 lookSensitivity = new Vector2(1f, 1f);
+    [SerializeField] private float minPitch = -89f;
+    [SerializeField] private float maxPitch = 89f;
+
     [Header("References")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private InputActionReference moveAction;
+    [SerializeField] private InputActionReference lookAction;
     [SerializeField] private InputActionReference jumpAction;
     [SerializeField] private InputActionReference crouchAction;
     [SerializeField] private InputActionReference sprintAction;
@@ -30,6 +36,8 @@ public class FpsMovement : MonoBehaviour
 
     private CharacterController _characterController;
     private Vector2 _moveInput;
+    private Vector2 _lookInput;
+    private float _cameraPitch;
     private bool _isGrounded;
     private bool _isRunning;
     private bool _isCrouching;
@@ -46,6 +54,11 @@ public class FpsMovement : MonoBehaviour
     {
         moveAction.action.performed += StoreMovementInput;
         moveAction.action.canceled += StoreMovementInput;
+        if (lookAction != null)
+        {
+            lookAction.action.performed += StoreLookInput;
+            lookAction.action.canceled += StoreLookInput;
+        }
         jumpAction.action.performed += Jump;
         crouchAction.action.performed += Crouch;
         sprintAction.action.performed += Sprint;
@@ -56,6 +69,11 @@ public class FpsMovement : MonoBehaviour
     {
         moveAction.action.performed -= StoreMovementInput;
         moveAction.action.canceled -= StoreMovementInput;
+        if (lookAction != null)
+        {
+            lookAction.action.performed -= StoreLookInput;
+            lookAction.action.canceled -= StoreLookInput;
+        }
         jumpAction.action.performed -= Jump;
         crouchAction.action.performed -= Crouch;
         sprintAction.action.performed -= Sprint;
@@ -65,6 +83,7 @@ public class FpsMovement : MonoBehaviour
     private void Update()
     {
         _isGrounded = _characterController.isGrounded;
+        HandleMouseLook();
         HandleGravity();
         HandleMovement();
         HandleCrouchTransition();
@@ -73,6 +92,28 @@ public class FpsMovement : MonoBehaviour
     private void StoreMovementInput(InputAction.CallbackContext context)
     {
         _moveInput = context.ReadValue<Vector2>();
+    }
+
+    private void StoreLookInput(InputAction.CallbackContext context)
+    {
+        _lookInput = context.ReadValue<Vector2>();
+    }
+
+    private void HandleMouseLook()
+    {
+        float sens = SettingsManager.Instance != null ? SettingsManager.Instance.sensitivity : 1f;
+        Vector2 inputDelta = _lookInput * sens;
+
+        transform.Rotate(Vector3.up * inputDelta.x * lookSensitivity.x);
+
+        _cameraPitch -= inputDelta.y * lookSensitivity.y;
+        _cameraPitch = Mathf.Clamp(_cameraPitch, minPitch, maxPitch);
+
+        if (cameraTransform != null)
+        {
+            Vector3 currentLocalEuler = cameraTransform.localEulerAngles;
+            cameraTransform.localRotation = Quaternion.Euler(_cameraPitch, currentLocalEuler.y, currentLocalEuler.z);
+        }
     }
 
     private void Jump(InputAction.CallbackContext context)
@@ -85,7 +126,6 @@ public class FpsMovement : MonoBehaviour
 
     private void Crouch(InputAction.CallbackContext context)
     {
-        //Debug.Log($"Crouch Triggered");
         if(_isCrouching)
         {
             if(CanStandUp())
@@ -157,14 +197,12 @@ public class FpsMovement : MonoBehaviour
             _verticalVelocity = initialFallVelocity;
         }
 
-        //camera shaking script
-        bool isGroundedAndMoving =  isMoving && _isGrounded;
+        bool isGroundedAndMoving = isMoving && _isGrounded;
         if(cameraNoiseController != null)
         {
             cameraNoiseController.SetMovementState(isGroundedAndMoving, currentSpeed == runSpeed);
         }
 
-        //handle stamina system
         if(staminaSystem != null)
         {
             if(currentSpeed == runSpeed && isMoving && _isGrounded)
@@ -176,7 +214,6 @@ public class FpsMovement : MonoBehaviour
                 staminaSystem.RegenStamina();
             }
         }
-        //Debug.Log(isSprintingNow);
     }
 
     private void HandleCrouchTransition()
@@ -190,7 +227,6 @@ public class FpsMovement : MonoBehaviour
         }
         else
         {
-            //already close to smooth no lerping needed
             _characterController.height = _targetHeight;
             _characterController.center = Vector3.up * (_targetHeight * 0.5f);
         }
