@@ -37,6 +37,10 @@ public class GameManager : MonoBehaviour
     [Header("Transition")]
     public CanvasGroup fadeCanvas;
 
+    [Header("Win Screen")]
+    public GameObject winPanel;
+    public TextMeshProUGUI timeText;
+
     public enum GameState { Playing, Won, Transitioning }
     public GameState State { get; private set; }
 
@@ -198,9 +202,44 @@ public class GameManager : MonoBehaviour
     {
         State = GameState.Won;
         timerRunning = false;
-        if (fadeCanvas != null) fadeCanvas.alpha = 0f;
-        Debug.Log($"WIN!!! Time: {elapsedTime:F2}s");
-        // trigger win UI here
+        StartCoroutine(WinRoutine());
+    }
+
+    private IEnumerator WinRoutine()
+    {
+        yield return StartCoroutine(FadeWhite(0f, 1f, 1f));
+        yield return new WaitForSeconds(0.5f);
+
+        if (winPanel != null)
+            winPanel.SetActive(true);
+
+        if (timeText != null)
+        {
+            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+            float seconds = elapsedTime % 60f;
+            timeText.text = $"Time: {minutes:00}:{seconds:00.00}";
+        }
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        CursorController.IsPaused = true;
+    }
+
+    private IEnumerator FadeWhite(float from, float to, float duration)
+    {
+        if (fadeCanvas == null) yield break;
+
+        var img = fadeCanvas.GetComponentInChildren<UnityEngine.UI.Image>();
+        if (img != null) img.color = Color.white;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            fadeCanvas.alpha = Mathf.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+        fadeCanvas.alpha = to;
     }
 
     private void UpdateFloorUI()
