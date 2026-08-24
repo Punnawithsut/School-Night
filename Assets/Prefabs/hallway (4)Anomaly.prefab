@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6133604483467987919}
   - component: {fileID: 651262132572983575}
   m_Layer: 0
-  m_Name: hallway4Anomaly
+  m_Name: hallway (4)Anomaly
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
