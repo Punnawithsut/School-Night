@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Audio;
+using Unity.Cinemachine;
+using System;
 
 public class SettingsManager : MonoBehaviour
 {
@@ -15,6 +17,7 @@ public class SettingsManager : MonoBehaviour
     [Header("References")]
     public AudioSource bgmSource;
     public AudioSource sfxSource;
+    public CinemachineInputAxisController cinemachineInputAxisController;
 
     [Header("Sensitivity")]
     public float sensitivity = 1f;
@@ -27,6 +30,11 @@ public class SettingsManager : MonoBehaviour
 
     private void Start()
     {
+        if (cinemachineInputAxisController == null)
+        {
+            cinemachineInputAxisController = FindAnyObjectByType<CinemachineInputAxisController>();
+        }
+
         // โหลดค่าที่เคยตั้งไว้
         bgmSlider.value = PlayerPrefs.GetFloat("BGMVolume", 1f);
         sfxSlider.value = PlayerPrefs.GetFloat("SFXVolume", 1f);
@@ -65,7 +73,9 @@ public class SettingsManager : MonoBehaviour
 
     private void OnSensitivityChanged(float value)
     {
+        if(value <= 0f) value = 0.1f;
         sensitivity = value;
+        ApplyCinemachineSensitivity();
         PlayerPrefs.SetFloat("Sensitivity", value);
     }
 
@@ -74,5 +84,18 @@ public class SettingsManager : MonoBehaviour
         if (bgmSource != null) bgmSource.volume = bgmSlider.value;
         if (sfxSource != null) sfxSource.volume = sfxSlider.value;
         sensitivity = sensitivitySlider.value;
+        ApplyCinemachineSensitivity();
+    }
+
+    private void ApplyCinemachineSensitivity()
+    {
+        if (cinemachineInputAxisController == null) return;
+
+        foreach (var controller in cinemachineInputAxisController.Controllers)
+        {
+            float direction = Mathf.Sign(controller.Input.Gain);
+            Console.WriteLine(direction);
+            controller.Input.Gain = direction == 0f ? sensitivity : direction * sensitivity;
+        }
     }
 }
