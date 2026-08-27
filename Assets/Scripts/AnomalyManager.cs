@@ -26,7 +26,7 @@ public class AnomalyManager : MonoBehaviour
     [Header("Weighted Anomaly Pool")]
     [SerializeField] private List<WeightedAnomaly> anomalyPool;
 
-    // Floor tracking now lives solely in GameManager. This class just reads it.
+    // Floor tracking lives in GameManager. This class just reads it.
     public bool IsAnomalyActive { get; private set; } = false;
     public bool CurrentFloorHasAnomaly => IsAnomalyActive;
 
@@ -100,7 +100,7 @@ public class AnomalyManager : MonoBehaviour
     {
         float totalWeight = 0f;
 
-        // 1. Sum total weight, ignoring items with weight <= 0
+        // 1. Sum total weight for items with valid prefabs
         foreach (var item in anomalyPool)
         {
             if (item.prefab != null && item.weight > 0f)
@@ -115,7 +115,7 @@ public class AnomalyManager : MonoBehaviour
         float randomValue = Random.Range(0f, totalWeight);
         float cumulativeWeight = 0f;
 
-        // 3. Find the selected anomaly based on cumulative weight
+        // 3. Find selected index
         for (int i = 0; i < anomalyPool.Count; i++)
         {
             var item = anomalyPool[i];
@@ -138,13 +138,13 @@ public class AnomalyManager : MonoBehaviour
         var anomalyData = anomalyPool[index];
         if (anomalyData.prefab == null) return;
 
-        // 1. Hide normal object in the scene
+        // 1. Hide normal object in scene (e.g., Normal Guard or normal prop)
         if (anomalyData.normalObject != null)
         {
             anomalyData.normalObject.SetActive(false);
         }
 
-        // 2. Position strictly from anomalyMark (fallback to normalObject if mark missing)
+        // 2. Position strictly from anomalyMark (fallback to normalObject or prefab position)
         Vector3 spawnPos = anomalyData.anomalyMark != null
             ? anomalyData.anomalyMark.position
             : (anomalyData.normalObject != null ? anomalyData.normalObject.transform.position : anomalyData.prefab.transform.position);
@@ -152,10 +152,10 @@ public class AnomalyManager : MonoBehaviour
         // 3. Rotation strictly from the Prefab itself
         Quaternion spawnRot = anomalyData.prefab.transform.rotation;
 
-        // 4. Instantiate prefab with Mark Position & Prefab Rotation
+        // 4. Instantiate anomaly prefab (e.g., Chaser Guard Prefab)
         currentActiveAnomaly = Instantiate(anomalyData.prefab, spawnPos, spawnRot);
 
-        // 5. Parent to Scene Hierarchy maintaining world transform
+        // 5. Parent maintaining world transform
         if (anomalyData.anomalyMark != null)
         {
             currentActiveAnomaly.transform.SetParent(anomalyData.anomalyMark.parent, true);

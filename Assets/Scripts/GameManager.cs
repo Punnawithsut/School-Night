@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -254,5 +255,38 @@ public class GameManager : MonoBehaviour
         int minutes = Mathf.FloorToInt(elapsedTime / 60f);
         float seconds = elapsedTime % 60f;
         timerText.text = $"{minutes:00}:{seconds:00.00}";
+    }
+
+    // Call this from GuardAI.cs when the player is caught
+    public void ResetToFloor8()
+    {
+        if (State != GameState.Playing) return;
+        StartCoroutine(ResetFloor8Routine());
+    }
+
+    private IEnumerator ResetFloor8Routine()
+    {
+        State = GameState.Transitioning;
+        timerRunning = false;
+
+        // Fade to black
+        yield return StartCoroutine(Fade(0f, 1f, 0.5f));
+        yield return new WaitForSeconds(0.3f);
+
+        // Reset progress back to Floor 8
+        currentFloor = startingFloor;
+        NextLoop();
+
+        // Fade back in
+        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(Fade(1f, 0f, 0.5f));
+    }
+
+    public void OnExitButtonClicked()
+    {
+        Time.timeScale = 1f;
+        CursorController.IsPaused = false;
+
+        SceneManager.LoadScene("startUI");
     }
 }
