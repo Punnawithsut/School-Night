@@ -7,11 +7,7 @@ public class NormalGuardAI : MonoBehaviour
     public Transform elevatorFrontPoint;
 
     [Header("Movement Settings")]
-    public float walkSpeed = 2.0f;
-
-    [Header("Animation Settings")]
-    [Tooltip("Fixed Animator parameter value to guarantee Walk animation plays")]
-    public float walkAnimationValue = 2.0f;
+    public float walkSpeed = 3.0f;
 
     private NavMeshAgent _agent;
     private Animator _animator;
@@ -23,9 +19,10 @@ public class NormalGuardAI : MonoBehaviour
         _animator = GetComponent<Animator>();
     }
 
-    private void OnEnable()
+    public void ResetGuard()
     {
         _hasReached = false;
+        if (_agent == null) _agent = GetComponent<NavMeshAgent>();
         if (_agent == null) return;
 
         _agent.enabled = false;
@@ -38,6 +35,7 @@ public class NormalGuardAI : MonoBehaviour
 
         if (_agent.isOnNavMesh)
         {
+            _agent.Warp(spawnPoint.position);
             _agent.isStopped = false;
             _agent.speed = walkSpeed;
             if (elevatorFrontPoint != null)
@@ -45,6 +43,11 @@ public class NormalGuardAI : MonoBehaviour
                 _agent.SetDestination(elevatorFrontPoint.position);
             }
         }
+    }
+
+    private void OnEnable()
+    {
+        ResetGuard();
     }
 
     private void Update()
@@ -69,9 +72,8 @@ public class NormalGuardAI : MonoBehaviour
 
         if (_animator != null)
         {
-            // Forces exact walk animation value while walking, then 0 when arrived
-            float speedValue = _hasReached ? 0f : walkAnimationValue;
-            _animator.SetFloat("Speed", speedValue);
+            float currentSpeed = _agent.velocity.magnitude;
+            _animator.SetFloat("Speed", currentSpeed, 0.1f, Time.deltaTime);
         }
     }
 }

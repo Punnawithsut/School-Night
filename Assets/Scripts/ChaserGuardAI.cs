@@ -6,7 +6,6 @@ public class ChaserGuardAI : MonoBehaviour
     [Header("Waypoints & Targets")]
     public Transform spawnPoint;
     public float runSpeed = 5.5f;
-    public float runAnimationValue = 5.5f;
 
     private Transform _player;
     private NavMeshAgent _agent;
@@ -25,14 +24,12 @@ public class ChaserGuardAI : MonoBehaviour
         _isCaught = false;
         _spawnTime = Time.time;
 
-        // 1. Auto-find GuardSpawnPoint in Scene if not assigned in Inspector
         if (spawnPoint == null)
         {
             GameObject sp = GameObject.Find("GuardSpawnPoint");
             if (sp != null) spawnPoint = sp.transform;
         }
 
-        // 2. Force agent to spawn point before NavMesh activates
         if (_agent != null && spawnPoint != null)
         {
             _agent.enabled = false;
@@ -63,7 +60,6 @@ public class ChaserGuardAI : MonoBehaviour
     {
         if (_agent == null || !_agent.isOnNavMesh || _isCaught || _player == null) return;
 
-        // Freeze during screen fades & floor intro animation
         if (GameManager.Instance != null && GameManager.Instance.State != GameManager.GameState.Playing)
         {
             _agent.isStopped = true;
@@ -71,24 +67,23 @@ public class ChaserGuardAI : MonoBehaviour
 
             if (_animator != null)
             {
-                _animator.SetFloat("Speed", 0f);
+                _animator.SetFloat("Speed", 0f, 0.1f, Time.deltaTime);
             }
             return;
         }
 
-        // Active Chase
         _agent.isStopped = false;
         _agent.SetDestination(_player.position);
 
         if (_animator != null)
         {
-            _animator.SetFloat("Speed", runAnimationValue);
+            float currentSpeed = _agent.velocity.magnitude;
+            _animator.SetFloat("Speed", currentSpeed, 0.1f, Time.deltaTime);
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // 1.5-second grace period after spawning to prevent instant catches during floor loading
         if (Time.time - _spawnTime < 1.5f) return;
         if (_isCaught) return;
         if (GameManager.Instance != null && GameManager.Instance.State != GameManager.GameState.Playing) return;
@@ -96,7 +91,12 @@ public class ChaserGuardAI : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             _isCaught = true;
-            if (_agent != null && _agent.isOnNavMesh) _agent.ResetPath();
+            if (_agent != null && _agent.isOnNavMesh)
+            {
+                _agent.isStopped = true;
+                _agent.velocity = Vector3.zero;
+                _agent.ResetPath();
+            }
 
             if (_animator != null)
             {
