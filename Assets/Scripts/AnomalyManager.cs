@@ -36,6 +36,7 @@ public class AnomalyManager : MonoBehaviour
     public void SetupFloor()
     {
         GenerateNextRoom();
+
     }
 
     public void GenerateNextRoom()
@@ -85,15 +86,25 @@ public class AnomalyManager : MonoBehaviour
         }
 
         if (anomalyPool != null)
-        {
-            foreach (var item in anomalyPool)
             {
-                if (item.normalObject != null)
+                foreach (var item in anomalyPool)
                 {
-                    item.normalObject.SetActive(true);
+                    if (item.normalObject != null)
+                    {
+                        // 1. Disable first to guarantee a state change
+                        item.normalObject.SetActive(false);
+                        
+                        // 2. Enable to trigger OnEnable() even on consecutive normal floors
+                        item.normalObject.SetActive(true);
+
+                        // 3. Optional: Explicitly trigger ResetGuard if NormalGuardAI component exists
+                        if (item.normalObject.TryGetComponent<NormalGuardAI>(out var guard))
+                        {
+                            guard.ResetGuard();
+                        }
+                    }
                 }
             }
-        }
     }
 
     private int GetRandomWeightedAnomalyIndex()
