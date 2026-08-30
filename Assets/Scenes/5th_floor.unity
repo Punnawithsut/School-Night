@@ -3872,43 +3872,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnomalyManager
   debugMode: 0
-  anomalyChance: 1
+  anomalyChance: 0.7
   anomalyPool:
   - anomalyName: SignAnomaly
     prefab: {fileID: 1417840258523066605, guid: c8828adea75f4e54f9ae67bd55674aaa, type: 3}
     normalObject: {fileID: 1065703756}
     anomalyMark: {fileID: 8551607277867313062}
-    weight: 0
+    weight: 1
   - anomalyName: ChairAnomaly
     prefab: {fileID: 9187462726484872383, guid: 7a22bff3343f9b14c991fb1cfee67db4, type: 3}
     normalObject: {fileID: 1356863307}
     anomalyMark: {fileID: 271044536}
-    weight: 0
+    weight: 1
   - anomalyName: DoorAnomaly
     prefab: {fileID: 2265602183186695799, guid: 80935367395df784d9ff1f79736fc17f, type: 3}
     normalObject: {fileID: 1739859358}
     anomalyMark: {fileID: 52037216}
-    weight: 0
+    weight: 1
   - anomalyName: LightAnomaly
     prefab: {fileID: 8458824204784863449, guid: 456b8721e51405a45970f9deaf3ce39f, type: 3}
     normalObject: {fileID: 977025171}
     anomalyMark: {fileID: 1751921063}
-    weight: 0
+    weight: 1
   - anomalyName: BlackoutAnomaly
     prefab: {fileID: 2627778818346425647, guid: 30858ba0c3e3c8b4bbfeb53345ccbb9c, type: 3}
     normalObject: {fileID: 0}
     anomalyMark: {fileID: 286776106}
-    weight: 0
+    weight: 1
   - anomalyName: AssignmentAnomaly
     prefab: {fileID: 5240506911987717029, guid: 0bb39d883fbb58c4598cd33ace3e42ee, type: 3}
     normalObject: {fileID: 68480701}
     anomalyMark: {fileID: 1508760887}
-    weight: 0
+    weight: 1
   - anomalyName: StackChairAnomaly
     prefab: {fileID: 1584324775586235612, guid: 652cbcb1c95010545bd95f92fd8b7a83, type: 3}
     normalObject: {fileID: 372549426}
     anomalyMark: {fileID: 140942727}
-    weight: 0
+    weight: 1
   - anomalyName: GuardAnomaly
     prefab: {fileID: 1326957072341050767, guid: b47e7244a6bbcbf41833f00714ca0c99, type: 3}
     normalObject: {fileID: 1491094591}

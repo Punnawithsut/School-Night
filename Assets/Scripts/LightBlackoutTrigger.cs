@@ -4,12 +4,14 @@ public class LightBlackoutTrigger : MonoBehaviour
 {
     private HorrorLightFlicker _flickerScript;
     private Light[] _hallwayLights;
+    private FlashLight _flashLight;
     private bool _hasTriggered = false;
 
     private void Start()
     {
         _flickerScript = FindFirstObjectByType<HorrorLightFlicker>();
         _hallwayLights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+        _flashLight = FindFirstObjectByType<FlashLight>();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -22,6 +24,9 @@ public class LightBlackoutTrigger : MonoBehaviour
 
             if (_flickerScript != null)
                 _flickerScript.enabled = false;
+
+            if (_flashLight != null)
+                _flashLight.SetBlackoutActive(true);
 
             if (_hallwayLights != null)
             {
@@ -39,6 +44,9 @@ public class LightBlackoutTrigger : MonoBehaviour
     {
         if (_flickerScript != null)
             _flickerScript.enabled = true;
+
+        if (_flashLight != null)
+            _flashLight.SetBlackoutActive(false);
 
         if (_hallwayLights != null)
         {
