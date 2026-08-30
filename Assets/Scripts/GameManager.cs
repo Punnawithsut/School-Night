@@ -38,29 +38,62 @@ public class GameManager : MonoBehaviour
     [Header("Transition")]
     public CanvasGroup fadeCanvas;
 
+    [Header("Elevator Sound")]
+    [SerializeField] private AudioSource elevatorAudio;
+
     [Header("Win Screen")]
     public GameObject winPanel;
     public TextMeshProUGUI timeText;
 
-    public enum GameState { Playing, Won, Transitioning }
-    public GameState State { get; private set; }
-
-    void Awake()
+    public enum GameState
     {
-        if (Instance == null) { Instance = this; }
-        else { Destroy(gameObject); return; }
+        Playing,
+        Won,
+        Transitioning
     }
 
-    void Start()
+    public GameState State { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
+
+    private void Start()
     {
         currentFloor = startingFloor;
-        if (fadeCanvas != null) fadeCanvas.alpha = 0f;
+
+        if (fadeCanvas != null)
+        {
+            fadeCanvas.alpha = 0f;
+        }
+
+        // Make sure elevator sound does not play automatically
+        if (elevatorAudio != null)
+        {
+            elevatorAudio.playOnAwake = false;
+            elevatorAudio.loop = false;
+        }
+
         TeleportPlayer();
-        anomalyManager.SetupFloor();
+
+        if (anomalyManager != null)
+        {
+            anomalyManager.SetupFloor();
+        }
+
         PlayFloorIntro();
     }
 
-    void Update()
+    private void Update()
     {
         if (timerRunning)
         {
@@ -69,44 +102,97 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // PLAYER TELEPORT
+    // =========================================================
+
     private void TeleportPlayer()
     {
-        if (playerStartPoint == null) return;
+        if (playerStartPoint == null)
+            return;
 
-        var player = GameObject.FindGameObjectWithTag("Player");
-        if (player == null) return;
+        GameObject player =
+            GameObject.FindGameObjectWithTag("Player");
 
-        var cc = player.GetComponent<CharacterController>();
-        if (cc != null) cc.enabled = false;
+        if (player == null)
+            return;
 
-        player.transform.position = playerStartPoint.position;
-        player.transform.rotation = Quaternion.Euler(0, playerStartPoint.rotation.eulerAngles.y, 0);
+        CharacterController cc =
+            player.GetComponent<CharacterController>();
 
-        var cam = player.GetComponentInChildren<Camera>();
+        if (cc != null)
+        {
+            cc.enabled = false;
+        }
+
+        player.transform.position =
+            playerStartPoint.position;
+
+        player.transform.rotation =
+            Quaternion.Euler(
+                0f,
+                playerStartPoint.rotation.eulerAngles.y,
+                0f
+            );
+
+        Camera cam =
+            player.GetComponentInChildren<Camera>();
+
         if (cam != null)
-            cam.transform.localRotation = Quaternion.Euler(playerStartPoint.rotation.eulerAngles.x, 0, 0);
+        {
+            cam.transform.localRotation =
+                Quaternion.Euler(
+                    playerStartPoint.rotation.eulerAngles.x,
+                    0f,
+                    0f
+                );
+        }
 
-        if (cc != null) cc.enabled = true;
+        if (cc != null)
+        {
+            cc.enabled = true;
+        }
     }
+
+    // =========================================================
+    // PLAYER CHOICE
+    // =========================================================
 
     public void PlayerMadeChoice(bool playerSaysAnomaly)
     {
-        if (State != GameState.Playing) return;
-        StartCoroutine(ChoiceRoutine(playerSaysAnomaly));
+        if (State != GameState.Playing)
+            return;
+
+        StartCoroutine(
+            ChoiceRoutine(playerSaysAnomaly)
+        );
     }
 
-    private IEnumerator ChoiceRoutine(bool playerSaysAnomaly)
+    private IEnumerator ChoiceRoutine(
+        bool playerSaysAnomaly
+    )
     {
         State = GameState.Transitioning;
         timerRunning = false;
 
-        yield return StartCoroutine(Fade(0f, 1f, 0.5f));
+        // Fade to black
+        yield return StartCoroutine(
+            Fade(0f, 1f, 0.5f)
+        );
+
+        // Play elevator sound after screen is black
+        PlayElevatorSound();
+
         yield return new WaitForSeconds(0.3f);
 
-        bool correct = playerSaysAnomaly == anomalyManager.CurrentFloorHasAnomaly;
+        bool correct =
+            playerSaysAnomaly ==
+            anomalyManager.CurrentFloorHasAnomaly;
+
         if (correct)
         {
             currentFloor--;
+
             if (currentFloor <= 0)
             {
                 WinGame();
@@ -121,33 +207,86 @@ public class GameManager : MonoBehaviour
         NextLoop();
 
         yield return new WaitForSeconds(0.5f);
-        yield return StartCoroutine(Fade(1f, 0f, 0.5f));
+
+        // Fade back in
+        yield return StartCoroutine(
+            Fade(1f, 0f, 0.5f)
+        );
     }
 
-    private IEnumerator Fade(float from, float to, float duration)
+    // =========================================================
+    // ELEVATOR SOUND
+    // =========================================================
+
+    private void PlayElevatorSound()
     {
-        if (fadeCanvas == null) yield break;
+        if (elevatorAudio == null)
+            return;
+
+        if (elevatorAudio.clip == null)
+            return;
+
+        elevatorAudio.Stop();
+        elevatorAudio.Play();
+    }
+
+    // =========================================================
+    // FADE
+    // =========================================================
+
+    private IEnumerator Fade(
+        float from,
+        float to,
+        float duration
+    )
+    {
+        if (fadeCanvas == null)
+            yield break;
 
         float elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            fadeCanvas.alpha = Mathf.Lerp(from, to, elapsed / duration);
+
+            fadeCanvas.alpha =
+                Mathf.Lerp(
+                    from,
+                    to,
+                    elapsed / duration
+                );
+
             yield return null;
         }
+
         fadeCanvas.alpha = to;
     }
+
+    // =========================================================
+    // NEXT FLOOR
+    // =========================================================
 
     private void NextLoop()
     {
         TeleportPlayer();
-        anomalyManager.SetupFloor();
+
+        if (anomalyManager != null)
+        {
+            anomalyManager.SetupFloor();
+        }
+
         PlayFloorIntro();
     }
 
+    // =========================================================
+    // FLOOR INTRO
+    // =========================================================
+
     private void PlayFloorIntro()
     {
-        StartCoroutine(FloorIntroRoutine());
+        StartCoroutine(
+            FloorIntroRoutine()
+        );
     }
 
     private IEnumerator FloorIntroRoutine()
@@ -156,39 +295,88 @@ public class GameManager : MonoBehaviour
         timerRunning = false;
 
         if (timerText != null)
+        {
             timerText.gameObject.SetActive(false);
+        }
 
-        floorIntroLabel.text = $"Floor {currentFloor}";
-        floorIntroText.anchoredPosition = introCenterPos;
-        floorIntroText.localScale = Vector3.one * introBigScale;
-        floorIntroText.gameObject.SetActive(true);
+        if (floorIntroLabel != null)
+        {
+            floorIntroLabel.text =
+                $"Floor {currentFloor}";
+        }
 
-        yield return new WaitForSeconds(introHoldTime);
+        if (floorIntroText != null)
+        {
+            floorIntroText.anchoredPosition =
+                introCenterPos;
+
+            floorIntroText.localScale =
+                Vector3.one * introBigScale;
+
+            floorIntroText.gameObject.SetActive(true);
+        }
+
+        yield return new WaitForSeconds(
+            introHoldTime
+        );
 
         float elapsed = 0f;
-        Vector3 startScale = Vector3.one * introBigScale;
-        Vector3 endScale = Vector3.one * introSmallScale;
+
+        Vector3 startScale =
+            Vector3.one * introBigScale;
+
+        Vector3 endScale =
+            Vector3.one * introSmallScale;
 
         while (elapsed < introDuration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / introDuration);
-            float eased = EaseInOutCubic(t);
 
-            floorIntroText.anchoredPosition = Vector2.Lerp(introCenterPos, introCornerPos, eased);
-            floorIntroText.localScale = Vector3.Lerp(startScale, endScale, eased);
+            float t =
+                Mathf.Clamp01(
+                    elapsed / introDuration
+                );
+
+            float eased =
+                EaseInOutCubic(t);
+
+            if (floorIntroText != null)
+            {
+                floorIntroText.anchoredPosition =
+                    Vector2.Lerp(
+                        introCenterPos,
+                        introCornerPos,
+                        eased
+                    );
+
+                floorIntroText.localScale =
+                    Vector3.Lerp(
+                        startScale,
+                        endScale,
+                        eased
+                    );
+            }
 
             yield return null;
         }
 
-        floorIntroText.anchoredPosition = introCornerPos;
-        floorIntroText.localScale = endScale;
+        if (floorIntroText != null)
+        {
+            floorIntroText.anchoredPosition =
+                introCornerPos;
+
+            floorIntroText.localScale =
+                endScale;
+        }
 
         if (timerText != null)
+        {
             timerText.gameObject.SetActive(true);
+        }
 
         State = GameState.Playing;
         timerRunning = true;
+
         UpdateFloorUI();
     }
 
@@ -196,72 +384,141 @@ public class GameManager : MonoBehaviour
     {
         return t < 0.5f
             ? 4f * t * t * t
-            : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f;
+            : 1f -
+              Mathf.Pow(
+                  -2f * t + 2f,
+                  3f
+              ) / 2f;
     }
+
+    // =========================================================
+    // WIN
+    // =========================================================
 
     private void WinGame()
     {
         State = GameState.Won;
         timerRunning = false;
-        StartCoroutine(WinRoutine());
+
+        StartCoroutine(
+            WinRoutine()
+        );
     }
 
     private IEnumerator WinRoutine()
     {
-        yield return StartCoroutine(FadeWhite(0f, 1f, 1f));
+        yield return StartCoroutine(
+            FadeWhite(0f, 1f, 1f)
+        );
+
         yield return new WaitForSeconds(0.5f);
 
         if (winPanel != null)
+        {
             winPanel.SetActive(true);
+        }
 
         if (timeText != null)
         {
-            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-            float seconds = elapsedTime % 60f;
-            timeText.text = $"Time: {minutes:00}:{seconds:00.00}";
+            int minutes =
+                Mathf.FloorToInt(
+                    elapsedTime / 60f
+                );
+
+            float seconds =
+                elapsedTime % 60f;
+
+            timeText.text =
+                $"Time: {minutes:00}:{seconds:00.00}";
         }
 
-        Cursor.lockState = CursorLockMode.None;
+        Cursor.lockState =
+            CursorLockMode.None;
+
         Cursor.visible = true;
+
         CursorController.IsPaused = true;
     }
 
-    private IEnumerator FadeWhite(float from, float to, float duration)
+    private IEnumerator FadeWhite(
+        float from,
+        float to,
+        float duration
+    )
     {
-        if (fadeCanvas == null) yield break;
+        if (fadeCanvas == null)
+            yield break;
 
-        var img = fadeCanvas.GetComponentInChildren<UnityEngine.UI.Image>();
-        if (img != null) img.color = Color.white;
+        UnityEngine.UI.Image img =
+            fadeCanvas.GetComponentInChildren<
+                UnityEngine.UI.Image
+            >();
+
+        if (img != null)
+        {
+            img.color = Color.white;
+        }
 
         float elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            fadeCanvas.alpha = Mathf.Lerp(from, to, elapsed / duration);
+
+            fadeCanvas.alpha =
+                Mathf.Lerp(
+                    from,
+                    to,
+                    elapsed / duration
+                );
+
             yield return null;
         }
+
         fadeCanvas.alpha = to;
     }
 
+    // =========================================================
+    // UI
+    // =========================================================
+
     private void UpdateFloorUI()
     {
-        Debug.Log($"Now on floor {currentFloor}");
+        Debug.Log(
+            $"Now on floor {currentFloor}"
+        );
     }
 
     private void UpdateTimerUI()
     {
-        if (timerText == null) return;
+        if (timerText == null)
+            return;
 
-        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-        float seconds = elapsedTime % 60f;
-        timerText.text = $"{minutes:00}:{seconds:00.00}";
+        int minutes =
+            Mathf.FloorToInt(
+                elapsedTime / 60f
+            );
+
+        float seconds =
+            elapsedTime % 60f;
+
+        timerText.text =
+            $"{minutes:00}:{seconds:00.00}";
     }
+
+    // =========================================================
+    // GUARD RESET
+    // =========================================================
 
     // Call this from GuardAI.cs when the player is caught
     public void ResetToFloor8()
     {
-        if (State != GameState.Playing) return;
-        StartCoroutine(ResetFloor8Routine());
+        if (State != GameState.Playing)
+            return;
+
+        StartCoroutine(
+            ResetFloor8Routine()
+        );
     }
 
     private IEnumerator ResetFloor8Routine()
@@ -270,23 +527,40 @@ public class GameManager : MonoBehaviour
         timerRunning = false;
 
         // Fade to black
-        yield return StartCoroutine(Fade(0f, 1f, 0.5f));
+        yield return StartCoroutine(
+            Fade(0f, 1f, 0.5f)
+        );
+
+        // Play elevator sound
+        PlayElevatorSound();
+
         yield return new WaitForSeconds(0.3f);
 
         // Reset progress back to Floor 8
         currentFloor = startingFloor;
+
         NextLoop();
 
-        // Fade back in
         yield return new WaitForSeconds(0.5f);
-        yield return StartCoroutine(Fade(1f, 0f, 0.5f));
+
+        // Fade back in
+        yield return StartCoroutine(
+            Fade(1f, 0f, 0.5f)
+        );
     }
+
+    // =========================================================
+    // EXIT
+    // =========================================================
 
     public void OnExitButtonClicked()
     {
         Time.timeScale = 1f;
+
         CursorController.IsPaused = false;
 
-        SceneManager.LoadScene("startUI");
+        SceneManager.LoadScene(
+            "startUI"
+        );
     }
 }
