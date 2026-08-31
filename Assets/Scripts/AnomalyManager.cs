@@ -33,10 +33,12 @@ public class AnomalyManager : MonoBehaviour
     private GameObject currentActiveAnomaly;
     private int currentTestIndex = 0;
 
+    // Stores indices of anomalies that have already spawned across runs
+    private HashSet<int> spawnedAnomalyIndices = new HashSet<int>();
+
     public void SetupFloor()
     {
         GenerateNextRoom();
-
     }
 
     public void GenerateNextRoom()
@@ -58,7 +60,7 @@ public class AnomalyManager : MonoBehaviour
 
         if (currentFloor == startFloor)
         {
-            // First floor of a loop is always safe/normal.
+            // First floor of a loop is always safe/normal. No reset of anomaly history here.
             IsAnomalyActive = false;
         }
         else
@@ -78,6 +80,15 @@ public class AnomalyManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Call this when the player wins the game or starts a fresh play session.
+    /// </summary>
+    public void ResetAnomalyHistory()
+    {
+        spawnedAnomalyIndices.Clear();
+        Debug.Log("[DEBUG] Anomaly spawn history cleared.");
+    }
+
     private void ResetRoomObjects()
     {
         if (currentActiveAnomaly != null)
@@ -86,43 +97,55 @@ public class AnomalyManager : MonoBehaviour
         }
 
         if (anomalyPool != null)
+        {
+            foreach (var item in anomalyPool)
             {
-                foreach (var item in anomalyPool)
+                if (item.normalObject != null)
                 {
-                    if (item.normalObject != null)
-                    {
-                        // 1. Disable first to guarantee a state change
-                        item.normalObject.SetActive(false);
-                        
-                        // 2. Enable to trigger OnEnable() even on consecutive normal floors
-                        item.normalObject.SetActive(true);
+                    item.normalObject.SetActive(false);
+                    item.normalObject.SetActive(true);
 
-                        // 3. Optional: Explicitly trigger ResetGuard if NormalGuardAI component exists
-                        if (item.normalObject.TryGetComponent<NormalGuardAI>(out var guard))
-                        {
-                            guard.ResetGuard();
-                        }
+                    if (item.normalObject.TryGetComponent<NormalGuardAI>(out var guard))
+                    {
+                        guard.ResetGuard();
                     }
                 }
             }
+        }
     }
 
     private int GetRandomWeightedAnomalyIndex()
     {
         float totalWeight = 0f;
 
-        // 1. Sum total weight for items with valid prefabs
-        foreach (var item in anomalyPool)
+        // 1. Sum weight of anomalies that haven't spawned yet
+        for (int i = 0; i < anomalyPool.Count; i++)
         {
-            if (item.prefab != null && item.weight > 0f)
+            var item = anomalyPool[i];
+            if (item.prefab != null && item.weight > 0f && !spawnedAnomalyIndices.Contains(i))
             {
                 totalWeight += item.weight;
             }
         }
 
-        if (totalWeight <= 0f) return -1;
+        // Fallback: If ALL anomalies in the pool have been shown, reset history so they can spawn again
+        if (totalWeight <= 0f)
+        {
+            Debug.Log("[DEBUG] All anomalies shown! Resetting pool history.");
+            spawnedAnomalyIndices.Clear();
 
-        // 2. Roll a random weight value
+            for (int i = 0; i < anomalyPool.Count; i++)
+            {
+                var item = anomalyPool[i];
+                if (item.prefab != null && item.weight > 0f)
+                {
+                    totalWeight += item.weight;
+                }
+            }
+            if (totalWeight <= 0f) return -1;
+        }
+
+        // 2. Roll random weight
         float randomValue = Random.Range(0f, totalWeight);
         float cumulativeWeight = 0f;
 
@@ -130,7 +153,7 @@ public class AnomalyManager : MonoBehaviour
         for (int i = 0; i < anomalyPool.Count; i++)
         {
             var item = anomalyPool[i];
-            if (item.prefab == null || item.weight <= 0f) continue;
+            if (item.prefab == null || item.weight <= 0f || spawnedAnomalyIndices.Contains(i)) continue;
 
             cumulativeWeight += item.weight;
             if (randomValue < cumulativeWeight)
@@ -149,13 +172,16 @@ public class AnomalyManager : MonoBehaviour
         var anomalyData = anomalyPool[index];
         if (anomalyData.prefab == null) return;
 
-        // 1. Hide normal object in scene (e.g., Normal Guard or normal prop)
+        // Mark this anomaly index as shown
+        spawnedAnomalyIndices.Add(index);
+
+        // 1. Hide normal object in scene
         if (anomalyData.normalObject != null)
         {
             anomalyData.normalObject.SetActive(false);
         }
 
-        // 2. Position strictly from anomalyMark (fallback to normalObject or prefab position)
+        // 2. Position strictly from anomalyMark
         Vector3 spawnPos = anomalyData.anomalyMark != null
             ? anomalyData.anomalyMark.position
             : (anomalyData.normalObject != null ? anomalyData.normalObject.transform.position : anomalyData.prefab.transform.position);
@@ -163,7 +189,7 @@ public class AnomalyManager : MonoBehaviour
         // 3. Rotation strictly from the Prefab itself
         Quaternion spawnRot = anomalyData.prefab.transform.rotation;
 
-        // 4. Instantiate anomaly prefab (e.g., Chaser Guard Prefab)
+        // 4. Instantiate anomaly prefab
         currentActiveAnomaly = Instantiate(anomalyData.prefab, spawnPos, spawnRot);
 
         // 5. Parent maintaining world transform

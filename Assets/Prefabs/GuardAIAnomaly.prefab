@@ -108,7 +108,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 5.5
+  m_Speed: 8
   m_Acceleration: 30
   avoidancePriority: 50
   m_AngularSpeed: 720
@@ -156,7 +156,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuardAI
   spawnPoint: {fileID: 7384862836652135077, guid: bdf8d0a938d00df4f8be5cf882408feb, type: 3}
-  runSpeed: 5.5
+  runSpeed: 8
+  jumpscareDelay: 2
+  jumpscareCamera: {fileID: 0}
 --- !u!82 &3695667008916606886
 AudioSource:
   m_ObjectHideFlags: 0

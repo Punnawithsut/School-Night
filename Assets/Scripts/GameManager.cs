@@ -111,41 +111,35 @@ public class GameManager : MonoBehaviour
         if (playerStartPoint == null)
             return;
 
-        GameObject player =
-            GameObject.FindGameObjectWithTag("Player");
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
 
         if (player == null)
             return;
 
-        CharacterController cc =
-            player.GetComponent<CharacterController>();
+        CharacterController cc = player.GetComponent<CharacterController>();
 
         if (cc != null)
         {
             cc.enabled = false;
         }
 
-        player.transform.position =
-            playerStartPoint.position;
+        player.transform.position = playerStartPoint.position;
 
-        player.transform.rotation =
-            Quaternion.Euler(
-                0f,
-                playerStartPoint.rotation.eulerAngles.y,
-                0f
-            );
+        player.transform.rotation = Quaternion.Euler(
+            0f,
+            playerStartPoint.rotation.eulerAngles.y,
+            0f
+        );
 
-        Camera cam =
-            player.GetComponentInChildren<Camera>();
+        Camera cam = player.GetComponentInChildren<Camera>();
 
         if (cam != null)
         {
-            cam.transform.localRotation =
-                Quaternion.Euler(
-                    playerStartPoint.rotation.eulerAngles.x,
-                    0f,
-                    0f
-                );
+            cam.transform.localRotation = Quaternion.Euler(
+                playerStartPoint.rotation.eulerAngles.x,
+                0f,
+                0f
+            );
         }
 
         if (cc != null)
@@ -163,31 +157,23 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing)
             return;
 
-        StartCoroutine(
-            ChoiceRoutine(playerSaysAnomaly)
-        );
+        StartCoroutine(ChoiceRoutine(playerSaysAnomaly));
     }
 
-    private IEnumerator ChoiceRoutine(
-        bool playerSaysAnomaly
-    )
+    private IEnumerator ChoiceRoutine(bool playerSaysAnomaly)
     {
         State = GameState.Transitioning;
         timerRunning = false;
 
         // Fade to black
-        yield return StartCoroutine(
-            Fade(0f, 1f, 0.5f)
-        );
+        yield return StartCoroutine(Fade(0f, 1f, 0.5f));
 
         // Play elevator sound after screen is black
         PlayElevatorSound();
 
         yield return new WaitForSeconds(0.3f);
 
-        bool correct =
-            playerSaysAnomaly ==
-            anomalyManager.CurrentFloorHasAnomaly;
+        bool correct = playerSaysAnomaly == anomalyManager.CurrentFloorHasAnomaly;
 
         if (correct)
         {
@@ -209,9 +195,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Fade back in
-        yield return StartCoroutine(
-            Fade(1f, 0f, 0.5f)
-        );
+        yield return StartCoroutine(Fade(1f, 0f, 0.5f));
     }
 
     // =========================================================
@@ -234,11 +218,7 @@ public class GameManager : MonoBehaviour
     // FADE
     // =========================================================
 
-    private IEnumerator Fade(
-        float from,
-        float to,
-        float duration
-    )
+    private IEnumerator Fade(float from, float to, float duration)
     {
         if (fadeCanvas == null)
             yield break;
@@ -249,12 +229,7 @@ public class GameManager : MonoBehaviour
         {
             elapsed += Time.deltaTime;
 
-            fadeCanvas.alpha =
-                Mathf.Lerp(
-                    from,
-                    to,
-                    elapsed / duration
-                );
+            fadeCanvas.alpha = Mathf.Lerp(from, to, elapsed / duration);
 
             yield return null;
         }
@@ -284,9 +259,7 @@ public class GameManager : MonoBehaviour
 
     private void PlayFloorIntro()
     {
-        StartCoroutine(
-            FloorIntroRoutine()
-        );
+        StartCoroutine(FloorIntroRoutine());
     }
 
     private IEnumerator FloorIntroRoutine()
@@ -301,60 +274,47 @@ public class GameManager : MonoBehaviour
 
         if (floorIntroLabel != null)
         {
-            floorIntroLabel.text =
-                $"Floor {currentFloor}";
+            floorIntroLabel.text = $"Floor {currentFloor}";
         }
 
         if (floorIntroText != null)
         {
-            floorIntroText.anchoredPosition =
-                introCenterPos;
+            floorIntroText.anchoredPosition = introCenterPos;
 
-            floorIntroText.localScale =
-                Vector3.one * introBigScale;
+            floorIntroText.localScale = Vector3.one * introBigScale;
 
             floorIntroText.gameObject.SetActive(true);
         }
 
-        yield return new WaitForSeconds(
-            introHoldTime
-        );
+        yield return new WaitForSeconds(introHoldTime);
 
         float elapsed = 0f;
 
-        Vector3 startScale =
-            Vector3.one * introBigScale;
+        Vector3 startScale = Vector3.one * introBigScale;
 
-        Vector3 endScale =
-            Vector3.one * introSmallScale;
+        Vector3 endScale = Vector3.one * introSmallScale;
 
         while (elapsed < introDuration)
         {
             elapsed += Time.deltaTime;
 
-            float t =
-                Mathf.Clamp01(
-                    elapsed / introDuration
-                );
+            float t = Mathf.Clamp01(elapsed / introDuration);
 
-            float eased =
-                EaseInOutCubic(t);
+            float eased = EaseInOutCubic(t);
 
             if (floorIntroText != null)
             {
-                floorIntroText.anchoredPosition =
-                    Vector2.Lerp(
-                        introCenterPos,
-                        introCornerPos,
-                        eased
-                    );
+                floorIntroText.anchoredPosition = Vector2.Lerp(
+                    introCenterPos,
+                    introCornerPos,
+                    eased
+                );
 
-                floorIntroText.localScale =
-                    Vector3.Lerp(
-                        startScale,
-                        endScale,
-                        eased
-                    );
+                floorIntroText.localScale = Vector3.Lerp(
+                    startScale,
+                    endScale,
+                    eased
+                );
             }
 
             yield return null;
@@ -362,11 +322,9 @@ public class GameManager : MonoBehaviour
 
         if (floorIntroText != null)
         {
-            floorIntroText.anchoredPosition =
-                introCornerPos;
+            floorIntroText.anchoredPosition = introCornerPos;
 
-            floorIntroText.localScale =
-                endScale;
+            floorIntroText.localScale = endScale;
         }
 
         if (timerText != null)
@@ -384,11 +342,7 @@ public class GameManager : MonoBehaviour
     {
         return t < 0.5f
             ? 4f * t * t * t
-            : 1f -
-              Mathf.Pow(
-                  -2f * t + 2f,
-                  3f
-              ) / 2f;
+            : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f;
     }
 
     // =========================================================
@@ -400,16 +354,18 @@ public class GameManager : MonoBehaviour
         State = GameState.Won;
         timerRunning = false;
 
-        StartCoroutine(
-            WinRoutine()
-        );
+        // Reset anomaly history when the player escapes successfully
+        if (anomalyManager != null)
+        {
+            anomalyManager.ResetAnomalyHistory();
+        }
+
+        StartCoroutine(WinRoutine());
     }
 
     private IEnumerator WinRoutine()
     {
-        yield return StartCoroutine(
-            FadeWhite(0f, 1f, 1f)
-        );
+        yield return StartCoroutine(FadeWhite(0f, 1f, 1f));
 
         yield return new WaitForSeconds(0.5f);
 
@@ -420,39 +376,26 @@ public class GameManager : MonoBehaviour
 
         if (timeText != null)
         {
-            int minutes =
-                Mathf.FloorToInt(
-                    elapsedTime / 60f
-                );
+            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
 
-            float seconds =
-                elapsedTime % 60f;
+            float seconds = elapsedTime % 60f;
 
-            timeText.text =
-                $"Time: {minutes:00}:{seconds:00.00}";
+            timeText.text = $"Time: {minutes:00}:{seconds:00.00}";
         }
 
-        Cursor.lockState =
-            CursorLockMode.None;
+        Cursor.lockState = CursorLockMode.None;
 
         Cursor.visible = true;
 
         CursorController.IsPaused = true;
     }
 
-    private IEnumerator FadeWhite(
-        float from,
-        float to,
-        float duration
-    )
+    private IEnumerator FadeWhite(float from, float to, float duration)
     {
         if (fadeCanvas == null)
             yield break;
 
-        UnityEngine.UI.Image img =
-            fadeCanvas.GetComponentInChildren<
-                UnityEngine.UI.Image
-            >();
+        UnityEngine.UI.Image img = fadeCanvas.GetComponentInChildren<UnityEngine.UI.Image>();
 
         if (img != null)
         {
@@ -465,12 +408,7 @@ public class GameManager : MonoBehaviour
         {
             elapsed += Time.deltaTime;
 
-            fadeCanvas.alpha =
-                Mathf.Lerp(
-                    from,
-                    to,
-                    elapsed / duration
-                );
+            fadeCanvas.alpha = Mathf.Lerp(from, to, elapsed / duration);
 
             yield return null;
         }
@@ -484,9 +422,7 @@ public class GameManager : MonoBehaviour
 
     private void UpdateFloorUI()
     {
-        Debug.Log(
-            $"Now on floor {currentFloor}"
-        );
+        Debug.Log($"Now on floor {currentFloor}");
     }
 
     private void UpdateTimerUI()
@@ -494,16 +430,11 @@ public class GameManager : MonoBehaviour
         if (timerText == null)
             return;
 
-        int minutes =
-            Mathf.FloorToInt(
-                elapsedTime / 60f
-            );
+        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
 
-        float seconds =
-            elapsedTime % 60f;
+        float seconds = elapsedTime % 60f;
 
-        timerText.text =
-            $"{minutes:00}:{seconds:00.00}";
+        timerText.text = $"{minutes:00}:{seconds:00.00}";
     }
 
     // =========================================================
@@ -516,9 +447,7 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing)
             return;
 
-        StartCoroutine(
-            ResetFloor8Routine()
-        );
+        StartCoroutine(ResetFloor8Routine());
     }
 
     private IEnumerator ResetFloor8Routine()
@@ -527,9 +456,7 @@ public class GameManager : MonoBehaviour
         timerRunning = false;
 
         // Fade to black
-        yield return StartCoroutine(
-            Fade(0f, 1f, 0.5f)
-        );
+        yield return StartCoroutine(Fade(0f, 1f, 0.5f));
 
         // Play elevator sound
         PlayElevatorSound();
@@ -544,9 +471,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Fade back in
-        yield return StartCoroutine(
-            Fade(1f, 0f, 0.5f)
-        );
+        yield return StartCoroutine(Fade(1f, 0f, 0.5f));
     }
 
     // =========================================================
@@ -559,8 +484,6 @@ public class GameManager : MonoBehaviour
 
         CursorController.IsPaused = false;
 
-        SceneManager.LoadScene(
-            "startUI"
-        );
+        SceneManager.LoadScene("startUI");
     }
 }
