@@ -157,7 +157,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GuardAI
   spawnPoint: {fileID: 7384862836652135077, guid: bdf8d0a938d00df4f8be5cf882408feb, type: 3}
   runSpeed: 8
-  jumpscareDelay: 2
+  jumpscareDelay: 1
   jumpscareCamera: {fileID: 0}
 --- !u!82 &3695667008916606886
 AudioSource:

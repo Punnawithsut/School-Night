@@ -4095,7 +4095,7 @@ MonoBehaviour:
     prefab: {fileID: 2627778818346425647, guid: 30858ba0c3e3c8b4bbfeb53345ccbb9c, type: 3}
     normalObject: {fileID: 0}
     anomalyMark: {fileID: 286776106}
-    weight: 1
+    weight: 2
   - anomalyName: AssignmentAnomaly
     prefab: {fileID: 5240506911987717029, guid: 0bb39d883fbb58c4598cd33ace3e42ee, type: 3}
     normalObject: {fileID: 68480701}
@@ -4110,7 +4110,7 @@ MonoBehaviour:
     prefab: {fileID: 1326957072341050767, guid: b47e7244a6bbcbf41833f00714ca0c99, type: 3}
     normalObject: {fileID: 1491094591}
     anomalyMark: {fileID: 0}
-    weight: 1
+    weight: 2
 --- !u!4 &626768540
 Transform:
   m_ObjectHideFlags: 0
