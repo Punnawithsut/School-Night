@@ -12,12 +12,12 @@ public class FlashLight : MonoBehaviour
     [SerializeField] private AudioClip turnOffSound;
 
     private bool _isON;
+    private bool _blackoutActive;
 
     private void Start()
     {
-        ON.SetActive(false);
-        OFF.SetActive(true);
-
+        if (ON != null) ON.SetActive(false);
+        if (OFF != null) OFF.SetActive(true);
         _isON = false;
 
         if (audioSource != null)
@@ -27,34 +27,40 @@ public class FlashLight : MonoBehaviour
         }
     }
 
-    private void Update()
+    public void SetBlackoutActive(bool active)
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        _blackoutActive = active;
+
+        if (_blackoutActive && _isON)
         {
-            ToggleFlashlight();
+            if (ON != null) ON.SetActive(false);
+            if (OFF != null) OFF.SetActive(true);
+            _isON = false;
         }
     }
 
-    private void ToggleFlashlight()
+    // Update is called once per frame
+    void Update()
     {
-        if (_isON)
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            // Turn OFF
-            ON.SetActive(false);
-            OFF.SetActive(true);
+            if (_blackoutActive)
+                return;
 
-            PlaySound(turnOffSound);
+            if (_isON)
+            {
+                if (ON != null) ON.SetActive(false);
+                if (OFF != null) OFF.SetActive(true);
+                PlaySound(turnOffSound);
+            }
+            else
+            {
+                if (ON != null) ON.SetActive(true);
+                if (OFF != null) OFF.SetActive(false);
+                PlaySound(turnOnSound);
+            }
+            _isON = !_isON;
         }
-        else
-        {
-            // Turn ON
-            ON.SetActive(true);
-            OFF.SetActive(false);
-
-            PlaySound(turnOnSound);
-        }
-
-        _isON = !_isON;
     }
 
     private void PlaySound(AudioClip clip)
